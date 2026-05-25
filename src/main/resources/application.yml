@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: gatecontrol
+
+  # Datasource is configured programmatically by DatabaseConfig.
+  # Do NOT add datasource properties here; they are read from db.properties
+  # placed next to the installed JAR.
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    properties:
+      hibernate:
+        format_sql: false
+        use_national_char_variants: true
+
+server:
+  port: 8080

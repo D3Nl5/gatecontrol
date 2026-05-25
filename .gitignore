@@ -1,0 +1,33 @@
+# Build output
+target/
+build/
+
+# Maven wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# Sensitive config — copy db.properties.example → db.properties and fill in
+src/main/resources/db.properties
+
+# Password utility scripts and generated files
+encrypt-password.bat
+encrypt.txt
+Encryptor.class
+
+# Bundled JRE and installer output (too large for git)
+jre-runtime/
+app/
+
+# OS
+.DS_Store
+Thumbs.db

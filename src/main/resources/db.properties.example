@@ -1,0 +1,7 @@
+# GateControl - Database Connection Settings
+# Copy this file to db.properties and fill in your values.
+# db.properties is excluded from git (contains passwords).
+
+db.url=jdbc:sqlserver://localhost:1433;databaseName=GateControl;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+db.username=sa
+db.password=YOUR_SQL_SERVER_PASSWORD
