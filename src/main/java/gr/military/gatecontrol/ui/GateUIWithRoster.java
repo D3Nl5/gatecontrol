@@ -2200,11 +2200,19 @@ public class GateUIWithRoster extends Application {
     // Database Backup
     // ─────────────────────────────────────────────────────────────────────────
 
+    private boolean isH2DataSource() {
+        if (backupDataSource == null) return false;
+        try (java.sql.Connection c = backupDataSource.getConnection()) {
+            return c.getMetaData().getURL().startsWith("jdbc:h2");
+        } catch (Exception e) { return false; }
+    }
+
     private void performDatabaseBackup() {
         if (backupDataSource == null) {
             showError(t("Backup Error","Σφάλμα Αντιγράφου"), t("No database connection available.","Δεν υπάρχει σύνδεση με τη βάση δεδομένων."));
             return;
         }
+        if (isH2DataSource()) { performH2Backup(); return; }
 
         boolean wasFS = mainStage.isFullScreen();
         if (wasFS) mainStage.setFullScreen(false);
@@ -2259,6 +2267,48 @@ public class GateUIWithRoster extends Application {
                             t("Backup failed.\n\nNote: SQL Server needs write permission\nto the selected folder\n(or choose a folder on the C:\\ drive).\n\n",
                               "Αποτυχία αντιγράφου.\n\nΣημ.: Το SQL Server χρειάζεται δικαίωμα εγγραφής\nστον επιλεγμένο φάκελο\n(ή επιλέξτε φάκελο στο C:\\).\n\n")
                             + ex.getMessage());
+                });
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void performH2Backup() {
+        boolean wasFS = mainStage.isFullScreen();
+        if (wasFS) mainStage.setFullScreen(false);
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle(t("Save Database Backup","Αποθήκευση Αντιγράφου Βάσης"));
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"));
+        fc.setInitialFileName("GateControl_backup_" + stamp + ".zip");
+        fc.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("H2 Backup (*.zip)", "*.zip"));
+        File file = fc.showSaveDialog(mainStage);
+
+        if (wasFS) mainStage.setFullScreen(true);
+        if (file == null) return;
+
+        backupDbBtn.setDisable(true);
+        backupDbBtn.setText("⏳ ...");
+
+        final String backupPath = file.getAbsolutePath().replace("'", "''");
+
+        Thread t = new Thread(() -> {
+            try (java.sql.Connection conn = backupDataSource.getConnection()) {
+                conn.createStatement().execute("BACKUP TO '" + backupPath + "'");
+                Platform.runLater(() -> {
+                    backupDbBtn.setDisable(false);
+                    backupDbBtn.setText("💾 Backup");
+                    showInfo(t("✔  Backup completed!","✔  Αντίγραφο ολοκληρώθηκε!") + "\n\n" + file.getAbsolutePath());
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> {
+                    backupDbBtn.setDisable(false);
+                    backupDbBtn.setText("💾 Backup");
+                    showError(t("Backup Error","Σφάλμα Αντιγράφου"),
+                            t("Backup failed.\n\n","Αποτυχία αντιγράφου.\n\n") + ex.getMessage());
                 });
             }
         });

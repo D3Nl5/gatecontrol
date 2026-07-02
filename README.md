@@ -2,7 +2,7 @@
 
 Desktop application for military gate access control. Manages personnel entry/exit using RFID cards or NFC-enabled phones, logs all movements, and provides real-time presence monitoring.
 
-Built with Java 21, Spring Boot 3, JavaFX 21, and SQL Server.
+Built with Java 21, Spring Boot 3, JavaFX 21. Runs out of the box with a built-in H2 database — no SQL Server installation required unless you need it.
 
 ---
 
@@ -17,6 +17,7 @@ Built with Java 21, Spring Boot 3, JavaFX 21, and SQL Server.
 - Excel export of movement history and inside-personnel list
 - Webcam photo capture for personnel registration
 - Database backup with timestamp
+- English / Greek interface — toggle in the top bar
 - Compact / normal display modes, full-screen support
 - Windows installer (`GateControl-Setup.exe`)
 - NFC phone support — Android phones can act as access cards
@@ -40,7 +41,7 @@ Built with Java 21, Spring Boot 3, JavaFX 21, and SQL Server.
 | CPU | Intel Core i3 or better |
 | RAM | 4 GB minimum |
 | Disk | 500 MB free |
-| Database | Microsoft SQL Server 2019 or later (Express edition is sufficient) |
+| Database | Built-in H2 (default) or Microsoft SQL Server 2019+ |
 | RFID / NFC device | USB reader |
 | Camera | USB Webcam (optional — for personnel photos) |
 
@@ -48,14 +49,29 @@ Built with Java 21, Spring Boot 3, JavaFX 21, and SQL Server.
 
 ## Installation
 
-### 1. Install SQL Server
+### Quick start (H2 — no database setup needed)
+
+Just run the app. The database file (`gatecontrol-data.mv.db`) is created automatically in the same folder as the JAR on first startup.
+
+```
+java -jar target/gatecontrol-1.0.0.jar
+```
+
+That's it. Log in with the default admin password **1234** and change it immediately.
+
+---
+
+### Using SQL Server instead
+
+If you need SQL Server (shared server, existing infrastructure, etc.), follow the steps below.
+
+#### 1. Install SQL Server
 
 Download **SQL Server Express** (free): https://www.microsoft.com/en-us/sql-server/sql-server-downloads
 
-Run the installer as Administrator → select **Basic** installation.  
-Note the instance name created (e.g. `SQLEXPRESS` or `MSSQLSERVER`).
+Run the installer as Administrator → select **Basic** installation.
 
-### 2. Configure SQL Server — enable TCP/IP on port 1433
+#### 2. Enable TCP/IP on port 1433
 
 Open **SQL Server Configuration Manager**:
 
@@ -67,46 +83,19 @@ Open **SQL Server Configuration Manager**:
 
 > If Windows Firewall is active, add an inbound rule for TCP port 1433.
 
-### 3. Create the database
-
-Using SSMS or `sqlcmd`:
+#### 3. Create the database
 
 ```sql
 CREATE DATABASE GateControl;
 GO
 ```
 
-Make sure the `sa` account is enabled:  
+Make sure the `sa` account is enabled:
 SSMS → Security → Logins → sa → Properties → Status → Login: **Enabled**
 
-> Table structure is created automatically on first GateControl startup (Hibernate DDL auto-update). Only the empty database is needed.
+#### 4. Configure the connection
 
-### 4. Install GateControl
-
-Run `GateControl-Setup.exe` as Administrator and follow the setup wizard.
-
-When prompted for connection settings, enter:
-
-```
-Server:    localhost,1433
-Database:  GateControl
-Username:  sa
-Password:  [your sa password]
-```
-
-### 5. First startup
-
-1. Verify SQL Server service is running (`services.msc → SQL Server → Running`)
-2. Launch GateControl from the desktop shortcut
-3. Tables are created automatically on first run
-4. Log in as administrator with the default password **1234** and change it immediately
-5. Register personnel and their RFID / NFC card IDs
-
----
-
-## Configuration
-
-Copy the example config and fill in your values:
+Copy the example config:
 
 ```
 copy src\main\resources\db.properties.example src\main\resources\db.properties
@@ -122,17 +111,18 @@ db.password=your_password
 
 > `db.properties` is excluded from git — it contains credentials.
 
+#### 5. Start with the mssql profile
+
+```
+java -jar target/gatecontrol-1.0.0.jar --spring.profiles.active=mssql
+```
+
 ---
 
 ## Building from Source
 
 ```
 mvnw clean package -DskipTests
-```
-
-Run:
-```
-java -jar target/gatecontrol-1.0.0.jar
 ```
 
 Build the Windows installer (requires Inno Setup + jpackage):
@@ -164,9 +154,11 @@ src/main/java/gr/military/gatecontrol/
 
 | Problem | Solution |
 |---------|----------|
-| App won't start | Check SQL Server service is running (`services.msc`). Check `db.properties` connection settings. |
+| App won't start (H2) | Check that the working directory is writable — H2 creates its data file there. |
+| App won't start (SQL Server) | Check SQL Server service is running (`services.msc`). Check `db.properties` connection settings. |
 | RFID reader not detected | Unplug and replug USB. Restart the app with reader connected. |
 | Card not recognised | Verify the RFID UID is registered in the personnel record. |
 | Camera not shown | Ensure camera is connected and recognised by Windows. |
 | Excel export error | Close any open Excel file with the same name and retry. |
-| Data loss | Restore from the latest backup file (`.bak`) created via the Backup button. |
+| Data loss (H2) | Restore from the latest backup `.zip` created via the Backup button. |
+| Data loss (SQL Server) | Restore from the latest backup `.bak` created via the Backup button. |

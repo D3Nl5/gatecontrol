@@ -1,0 +1,6 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    properties:
+      hibernate:
+        use_national_char_variants: true

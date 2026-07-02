@@ -5,6 +5,7 @@ import gr.military.gatecontrol.auth.CredentialCrypto;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -30,6 +31,7 @@ import java.util.Properties;
  * Dev fallback   : src/main/resources/db.properties  (classpath)
  */
 @Configuration
+@Profile("mssql")
 public class DatabaseConfig {
 
     @Bean
